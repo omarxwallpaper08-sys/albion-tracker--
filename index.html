@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Albion Farm Tracker</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/tabler-icons.min.css">
+<style>
+:root{
+  --bg:#f8f8f6;--surface:#ffffff;--surface2:#f1f0eb;--border:rgba(0,0,0,0.1);
+  --border2:rgba(0,0,0,0.2);--text:#1a1a18;--text2:#6b6a65;--text3:#9b9a94;
+  --green:#1D9E75;--green-dark:#0F6E56;--green-bg:#E1F5EE;--green-text:#085041;
+  --red:#E24B4A;--red-bg:#FCEBEB;--red-text:#A32D2D;
+  --amber:#BA7517;--amber-bg:#FAEEDA;--amber-text:#633806;
+  --blue:#378ADD;--blue-bg:#E6F1FB;--blue-text:#0C447C;
+  --radius:8px;--radius-lg:12px;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#1a1a18;--surface:#232320;--surface2:#2c2c29;
+    --border:rgba(255,255,255,0.09);--border2:rgba(255,255,255,0.16);
+    --text:#f0efe8;--text2:#a8a79f;--text3:#6b6a64;
+    --green-bg:#04342C;--green-text:#9FE1CB;
+    --red-bg:#501313;--red-text:#F09595;
+    --amber-bg:#412402;--amber-text:#FAC775;
+    --blue-bg:#042C53;--blue-text:#85B7EB;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
+.app{max-width:920px;margin:0 auto;padding:28px 16px}
+.top-bar{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.app-title{font-size:20px;font-weight:600;letter-spacing:-0.3px}
+.badge{font-size:11px;padding:3px 10px;border-radius:99px;font-weight:500}
+.badge-on{background:var(--green-bg);color:var(--green-text)}
+.badge-off{background:var(--surface2);color:var(--text2)}
+.badge-pause{background:var(--amber-bg);color:var(--amber-text)}
+.timer{font-size:22px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-0.5px;margin-left:auto}
+.ctrl-row{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+button{cursor:pointer;font-family:inherit;font-size:13px;border-radius:var(--radius);border:0.5px solid var(--border2);padding:8px 14px;background:var(--surface);color:var(--text);transition:background .12s,opacity .12s;display:inline-flex;align-items:center;gap:6px}
+button:hover{background:var(--surface2)}
+button:active{opacity:.8}
+.btn-green{background:var(--green);border-color:var(--green);color:#fff}
+.btn-green:hover{background:var(--green-dark)}
+.btn-red{border-color:var(--red);color:var(--red-text)}
+.btn-red:hover{background:var(--red-bg)}
+.nav{display:flex;gap:0;margin-bottom:24px;border-bottom:1px solid var(--border);overflow-x:auto}
+.nav-btn{background:none;border:none;border-bottom:2px solid transparent;padding:9px 16px;cursor:pointer;font-size:13px;color:var(--text2);margin-bottom:-1px;white-space:nowrap;border-radius:0;display:inline-flex;align-items:center;gap:5px}
+.nav-btn:hover{color:var(--text);background:var(--surface2)}
+.nav-btn.active{color:var(--text);border-bottom-color:var(--green);font-weight:500}
+.page{display:none}.page.active{display:block}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:20px}
+.sc{background:var(--surface2);border-radius:var(--radius);padding:12px 14px}
+.sc-label{font-size:11px;color:var(--text2);margin-bottom:4px;display:flex;align-items:center;gap:5px}
+.sc-val{font-size:22px;font-weight:500}
+.sc-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;margin-bottom:16px}
+.card-title{font-size:11px;font-weight:500;color:var(--text2);margin-bottom:14px;text-transform:uppercase;letter-spacing:.6px}
+.form-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:11px;color:var(--text2)}
+input,select,textarea{font-family:inherit;font-size:13px;padding:7px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);outline:none;transition:border-color .12s}
+input:focus,select:focus,textarea:focus{border-color:var(--green)}
+input[type=number]{width:100px}
+input[type=text]{width:160px}
+select{width:148px}
+.tbl-wrap{border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.tbl-head,.tbl-row{display:grid;gap:8px;padding:9px 14px;align-items:center}
+.tbl-head{background:var(--surface2);font-size:11px;color:var(--text2);font-weight:500;text-transform:uppercase;letter-spacing:.4px}
+.tbl-row{border-top:0.5px solid var(--border);font-size:13px}
+.tbl-row:hover{background:var(--surface2)}
+.pill{font-size:10px;padding:2px 8px;border-radius:99px;display:inline-block;white-space:nowrap;font-weight:500}
+.p-silver{background:#D3D1C7;color:#2C2C2A}
+.p-equip{background:var(--blue-bg);color:var(--blue-text)}
+.p-mat{background:#C0DD97;color:#173404}
+.p-mob{background:#F5C4B3;color:#4A1B0C}
+.p-craft{background:#CECBF6;color:#26215C}
+.p-autre{background:var(--surface2);color:var(--text2)}
+.del-btn{background:none;border:none;padding:3px 6px;cursor:pointer;color:var(--text3);border-radius:4px;font-size:14px;display:inline-flex;align-items:center}
+.del-btn:hover{color:var(--red-text);background:var(--red-bg)}
+.empty{text-align:center;padding:32px;color:var(--text3);font-size:13px}
+.tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tag{font-size:11px;padding:4px 12px;border-radius:99px;border:0.5px solid var(--border2);cursor:pointer;color:var(--text2);background:var(--surface);font-weight:500}
+.tag:hover{background:var(--surface2)}
+.tag.active{background:var(--green);border-color:var(--green);color:#fff}
+.chart-bar-wrap{display:flex;flex-direction:column;gap:8px}
+.bar-row{display:flex;align-items:center;gap:10px}
+.bar-label{font-size:12px;color:var(--text2);width:120px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0}
+.bar-track{flex:1;background:var(--surface2);border-radius:99px;height:12px;overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;background:var(--green);transition:width .4s}
+.bar-val{font-size:12px;color:var(--text2);width:80px;flex-shrink:0}
+.mob-item{display:flex;align-items:center;gap:10px;background:var(--surface2);border-radius:var(--radius);padding:9px 14px}
+.mob-name{flex:1;font-weight:500;font-size:13px}
+.mob-meta{font-size:12px;color:var(--text2)}
+.hist-card{background:var(--surface2);border-radius:var(--radius);padding:12px 16px;margin-bottom:8px;cursor:pointer;border:0.5px solid transparent;transition:border-color .12s,background .12s}
+.hist-card:hover{border-color:var(--border2);background:var(--surface)}
+.hist-title{font-size:13px;font-weight:500}
+.hist-meta{font-size:11px;color:var(--text2);margin-top:2px}
+.hist-stats{display:flex;gap:14px;margin-top:8px;font-size:12px;color:var(--text2);flex-wrap:wrap}
+.warn{font-size:12px;color:var(--red-text);margin-top:8px;padding:6px 10px;background:var(--red-bg);border-radius:var(--radius)}
+.export-area{background:var(--surface2);border-radius:var(--radius);padding:12px;font-family:monospace;font-size:11px;color:var(--text);white-space:pre-wrap;max-height:200px;overflow-y:auto;margin-bottom:10px;border:0.5px solid var(--border);line-height:1.6}
+.tip{font-size:12px;color:var(--text3);margin-top:8px}
+footer{text-align:center;padding:32px 0 20px;color:var(--text3);font-size:12px;border-top:0.5px solid var(--border);margin-top:24px}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="top-bar">
+  <span class="app-title">Albion Farm Tracker</span>
+  <span class="badge badge-off" id="status-badge">Arrete</span>
+  <span class="timer" id="timer-display">0:00:00</span>
+</div>
+<div class="ctrl-row">
+  <button class="btn-green" id="toggle-btn" onclick="toggleSession()"><i class="ti ti-player-play"></i> Demarrer</button>
+  <button onclick="saveSession()" id="save-btn" style="display:none"><i class="ti ti-device-floppy"></i> Sauvegarder</button>
+  <button class="btn-red" onclick="resetCurrent()"><i class="ti ti-refresh"></i> Reinitialiser</button>
+</div>
+<div class="nav">
+  <button class="nav-btn active" onclick="showPage('farm',this)"><i class="ti ti-sword"></i> Farm en cours</button>
+  <button class="nav-btn" onclick="showPage('mobs',this)"><i class="ti ti-skull"></i> Mobs</button>
+  <button class="nav-btn" onclick="showPage('stats',this)"><i class="ti ti-chart-bar"></i> Statistiques</button>
+  <button class="nav-btn" onclick="showPage('history',this)"><i class="ti ti-clock"></i> Historique</button>
+  <button class="nav-btn" onclick="showPage('export',this)"><i class="ti ti-download"></i> Export</button>
+</div>
+<div id="page-farm" class="page active">
+  <div class="stats-grid">
+    <div class="sc"><div class="sc-label"><i class="ti ti-coin"></i> Silver gagne</div><div class="sc-val" id="t-silver">0</div><div class="sc-sub" id="r-silver">-- /h</div></div>
+    <div class="sc"><div class="sc-label"><i class="ti ti-sword"></i> Items lootes</div><div class="sc-val" id="t-items">0</div><div class="sc-sub" id="r-items">-- /h</div></div>
+    <div class="sc"><div class="sc-label"><i class="ti ti-star"></i> XP gagnee</div><div class="sc-val" id="t-xp">0</div><div class="sc-sub" id="r-xp">-- /h</div></div>
+    <div class="sc"><div class="sc-label"><i class="ti ti-skull"></i> Mobs tues</div><div class="sc-val" id="t-mobs">0</div><div class="sc-sub" id="r-mobs">-- /h</div></div>
+    <div class="sc"><div class="sc-label"><i class="ti ti-chart-line"></i> Valeur totale</div><div class="sc-val" id="t-value">0</div><div class="sc-sub">silver estime</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Ajouter un gain</div>
+    <div class="form-row" style="margin-bottom:10px">
+      <div class="field"><label>Type</label>
+        <select id="e-type" onchange="onTypeChange()">
+          <option value="mob">Kill mob</option>
+          <option value="silver">Silver</option>
+          <option value="equip">Equipement</option>
+          <option value="mat">Materiau</option>
+          <option value="craft">Craft</option>
+          <option value="autre">Autre</option>
+        </select>
+      </div>
+      <div class="field"><label>Nom</label><input type="text" id="e-name" placeholder="Ex: Undead Knight T5"/></div>
+      <div class="field" id="f-tier"><label>Tier</label>
+        <select id="e-tier" style="width:75px">
+          <option value="">-</option>
+          <option>T1</option><option>T2</option><option>T3</option><option>T4</option>
+          <option>T5</option><option>T6</option><option>T7</option><option>T8</option>
+        </select>
+      </div>
+      <div class="field"><label>Qte / Silver</label><input type="number" id="e-qty" placeholder="0" min="0"/></div>
+      <div class="field"><label>Valeur (silver)</label><input type="number" id="e-val" placeholder="0" min="0"/></div>
+      <div class="field"><label>XP</label><input type="number" id="e-xp" placeholder="0" min="0"/></div>
+      <div class="field"><label>Zone</label>
+        <select id="e-zone">
+          <option value="">-- Zone --</option>
+          <option>Royaumes Royaux</option><option>Zone Jaune</option><option>Zone Rouge</option>
+          <option>Zone Noire</option><option>Roads of Avalon</option><option>Avalonian Dungeon</option>
+          <option>Group Dungeon</option><option>Open World</option>
+        </select>
+      </div>
+      <button class="btn-green" onclick="addEntry()" style="height:34px;margin-top:18px"><i class="ti ti-plus"></i> Ajouter</button>
+    </div>
+    <div class="warn" id="add-warn" style="display:none"></div>
+  </div>
+  <div class="tag-row" id="filter-tags">
+    <span class="tag active" onclick="setFilter(this,'all')">Tous</span>
+    <span class="tag" onclick="setFilter(this,'mob')">Kill mob</span>
+    <span class="tag" onclick="setFilter(this,'silver')">Silver</span>
+    <span class="tag" onclick="setFilter(this,'equip')">Equipement</span>
+    <span class="tag" onclick="setFilter(this,'mat')">Materiau</span>
+    <span class="tag" onclick="setFilter(this,'craft')">Craft</span>
+  </div>
+  <div class="tbl-wrap">
+    <div class="tbl-head" style="grid-template-columns:2fr 85px 55px 80px 85px 75px 32px">
+      <span>Nom</span><span>Type</span><span>Tier</span><span>Qte</span><span>Valeur</span><span>XP</span><span></span>
+    </div>
+    <div id="loot-body"><div class="empty">Demarre une session et ajoute tes gains !</div></div>
+  </div>
+</div>
+<div id="page-mobs" class="page">
+  <div class="card">
+    <div class="card-title">Creer un type de mob</div>
+    <div class="form-row">
+      <div class="field"><label>Nom du mob</label><input type="text" id="mob-name-input" placeholder="Ex: Undead Footsoldier" style="width:200px"/></div>
+      <div class="field"><label>Silver moyen / kill</label><input type="number" id="mob-silver" placeholder="0" min="0"/></div>
+      <div class="field"><label>XP moyen / kill</label><input type="number" id="mob-xp-val" placeholder="0" min="0"/></div>
+      <button class="btn-green" onclick="addMobType()" style="height:34px;margin-top:18px"><i class="ti ti-plus"></i> Ajouter</button>
+    </div>
+    <p class="tip">Une fois cree, un bouton + Kill apparait pour logger un kill instantanement.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Mobs enregistres</div>
+    <div id="mob-list-el" style="display:flex;flex-direction:column;gap:8px"><div class="empty">Aucun mob enregistre.</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Kills par mob - session en cours</div>
+    <div class="chart-bar-wrap" id="kill-breakdown"><div class="empty">Aucun kill enregistre.</div></div>
+  </div>
+</div>
+<div id="page-stats" class="page">
+  <div class="stats-grid" style="margin-bottom:20px">
+    <div class="sc"><div class="sc-label">Efficacite</div><div class="sc-val" id="s-eff">-</div><div class="sc-sub">silver/h</div></div>
+    <div class="sc"><div class="sc-label">Silver / mob</div><div class="sc-val" id="s-silver-mob">-</div><div class="sc-sub">moyenne</div></div>
+    <div class="sc"><div class="sc-label">XP / mob</div><div class="sc-val" id="s-xp-mob">-</div><div class="sc-sub">moyenne</div></div>
+    <div class="sc"><div class="sc-label">Meilleur item</div><div class="sc-val" id="s-best-item" style="font-size:13px;word-break:break-word">-</div></div>
+  </div>
+  <div class="card"><div class="card-title">Silver par source</div><div class="chart-bar-wrap" id="chart-silver"><div class="empty">Pas de donnees.</div></div></div>
+  <div class="card"><div class="card-title">Top items par valeur</div><div class="chart-bar-wrap" id="chart-items"><div class="empty">Pas de donnees.</div></div></div>
+  <div class="card"><div class="card-title">Gains par zone</div><div class="chart-bar-wrap" id="chart-zone"><div class="empty">Pas de donnees.</div></div></div>
+</div>
+<div id="page-history" class="page">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <span style="font-size:15px;font-weight:500">Sessions sauvegardees</span>
+    <button class="btn-red" onclick="clearHistory()" style="font-size:12px;padding:6px 12px"><i class="ti ti-trash"></i> Tout effacer</button>
+  </div>
+  <div id="history-list"><div class="empty">Aucune session sauvegardee. Clique sur Sauvegarder apres ton farm !</div></div>
+</div>
+<div id="page-export" class="page">
+  <div class="card">
+    <div class="card-title">Export session courante</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <button onclick="exportCSV()"><i class="ti ti-file-spreadsheet"></i> CSV Excel</button>
+      <button onclick="exportJSON()"><i class="ti ti-code"></i> JSON</button>
+      <button onclick="showExportText()"><i class="ti ti-clipboard-text"></i> Resume texte</button>
+    </div>
+    <div class="export-area" id="export-preview">Clique sur un bouton pour previsualiser.</div>
+    <p class="tip">Le CSV s'ouvre dans Excel ou Google Sheets. Le JSON peut etre reimporte plus bas.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Importer une session JSON</div>
+    <textarea id="import-area" placeholder="Colle ton JSON ici..." style="width:100%;height:90px;resize:vertical;border-radius:var(--radius);border:0.5px solid var(--border2);padding:10px;background:var(--surface);color:var(--text);font-family:monospace;font-size:12px"></textarea>
+    <div style="margin-top:10px"><button onclick="importJSON()"><i class="ti ti-upload"></i> Importer</button></div>
+  </div>
+</div>
+<footer>Albion Farm Tracker - Donnees stockees localement dans ton navigateur - Gratuit et sans pub</footer>
+</div>
+<script>
+var TYPES={silver:'Silver',equip:'Equipement',mat:'Materiau',mob:'Kill mob',craft:'Craft',autre:'Autre'};
+var PCLS={silver:'p-silver',equip:'p-equip',mat:'p-mat',mob:'p-mob',craft:'p-craft',autre:'p-autre'};
+var running=false,startTime=null,elapsed=0,tickInterval=null,currentFilter='all';
+function ls(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
+function ss(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+var entries=ls('abt_entries',[]);
+var mobTypes=ls('abt_mobtypes',[]);
+var hist=ls('abt_history',[]);
+elapsed=ls('abt_elapsed',0);
+updateTimerDisplay();
+renderAll();
+function toggleSession(){
+  running=!running;
+  var btn=document.getElementById('toggle-btn');
+  var badge=document.getElementById('status-badge');
+  if(running){
+    startTime=Date.now()-elapsed;
+    tickInterval=setInterval(tick,1000);
+    btn.innerHTML='<i class="ti ti-player-pause"></i> Pause';
+    badge.textContent='En cours';badge.className='badge badge-on';
+    document.getElementById('save-btn').style.display='';
+  }else{
+    clearInterval(tickInterval);elapsed=Date.now()-startTime;ss('abt_elapsed',elapsed);
+    btn.innerHTML='<i class="ti ti-player-play"></i> Reprendre';
+    badge.textContent='En pause';badge.className='badge badge-pause';
+  }
+}
+function tick(){elapsed=Date.now()-startTime;ss('abt_elapsed',elapsed);updateTimerDisplay();updateRates();}
+function updateTimerDisplay(){
+  var s=Math.floor(elapsed/1000);
+  var h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;
+  document.getElementById('timer-display').textContent=h+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+}
+function showPage(id,btn){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='stats')renderStats();
+  if(id==='history')renderHistory();
+  if(id==='mobs')renderMobList();
+}
+function onTypeChange(){
+  var t=document.getElementById('e-type').value;
+  document.getElementById('f-tier').style.display=(t==='equip'||t==='mat'||t==='mob')?'':'none';
+}
+onTypeChange();
+function addEntry(){
+  var warn=document.getElementById('add-warn');warn.style.display='none';
+  if(!running){warn.textContent='Lance une session dabord !';warn.style.display='';return;}
+  var type=document.getElementById('e-type').value;
+  var name=document.getElementById('e-name').value.trim()||TYPES[type];
+  var tier=document.getElementById('e-tier').value;
+  var qty=parseInt(document.getElementById('e-qty').value)||0;
+  var val=parseInt(document.getElementById('e-val').value)||0;
+  var xp=parseInt(document.getElementById('e-xp').value)||0;
+  var zone=document.getElementById('e-zone').value;
+  entries.push({type:type,name:name,tier:tier,qty:qty,val:val,xp:xp,zone:zone,time:Date.now()});
+  ss('abt_entries',entries);
+  ['e-name','e-qty','e-val','e-xp'].forEach(function(id){document.getElementById(id).value='';});
+  renderAll();
+}
+function removeEntry(i){entries.splice(i,1);ss('abt_entries',entries);renderAll();}
+function setFilter(el,f){
+  currentFilter=f;
+  document.querySelectorAll('#filter-tags .tag').forEach(function(t){t.classList.remove('active');});
+  el.classList.add('active');renderLootList();
+}
+function renderAll(){renderLootList();updateStats();renderKillBreakdown();}
+function renderLootList(){
+  var body=document.getElementById('loot-body');
+  var filtered=currentFilter==='all'?entries:entries.filter(function(e){return e.type===currentFilter;});
+  if(!filtered.length){body.innerHTML='<div class="empty">Aucun gain enregistre.</div>';return;}
+  var html='';
+  var rev=filtered.slice().reverse();
+  for(var ri=0;ri<rev.length;ri++){
+    var e=rev[ri];var i=entries.indexOf(e);
+    html+='<div class="tbl-row" style="grid-template-columns:2fr 85px 55px 80px 85px 75px 32px">';
+    html+='<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+e.name+(e.zone?' <span style="font-size:10px;color:var(--text3)">'+e.zone+'</span>':'')+'</span>';
+    html+='<span><span class="pill '+PCLS[e.type]+'">'+TYPES[e.type]+'</span></span>';
+    html+='<span>'+(e.tier||'-')+'</span>';
+    html+='<span>'+(e.qty>0?e.qty.toLocaleString():'-')+'</span>';
+    html+='<span>'+(e.val>0?e.val.toLocaleString()+'s':'-')+'</span>';
+    html+='<span>'+(e.xp>0?e.xp.toLocaleString():'-')+'</span>';
+    html+='<button class="del-btn" onclick="removeEntry('+i+')"><i class="ti ti-x"></i></button>';
+    html+='</div>';
+  }
+  body.innerHTML=html;
+}
+function updateStats(){
+  var silver=0;entries.filter(function(e){return e.type==='silver';}).forEach(function(e){silver+=e.qty;});
+  var items=entries.filter(function(e){return e.type==='equip'||e.type==='mat'||e.type==='craft';}).length;
+  var xp=0;entries.forEach(function(e){xp+=e.xp;});
+  var mobs=entries.filter(function(e){return e.type==='mob';}).length;
+  var totalVal=0;entries.forEach(function(e){totalVal+=(e.val||0)+(e.type==='silver'?e.qty:0);});
+  document.getElementById('t-silver').textContent=silver.toLocaleString();
+  document.getElementById('t-items').textContent=items;
+  document.getElementById('t-xp').textContent=xp.toLocaleString();
+  document.getElementById('t-mobs').textContent=mobs;
+  document.getElementById('t-value').textContent=totalVal.toLocaleString();
+  updateRates();
+}
+function updateRates(){
+  var h=elapsed/3600000;
+  if(h<0.001){['silver','items','xp','mobs'].forEach(function(k){document.getElementById('r-'+k).textContent='-- /h';});return;}
+  var silver=0;entries.filter(function(e){return e.type==='silver';}).forEach(function(e){silver+=e.qty;});
+  var items=entries.filter(function(e){return e.type==='equip'||e.type==='mat'||e.type==='craft';}).length;
+  var xp=0;entries.forEach(function(e){xp+=e.xp;});
+  var mobs=entries.filter(function(e){return e.type==='mob';}).length;
+  document.getElementById('r-silver').textContent=Math.round(silver/h).toLocaleString()+' /h';
+  document.getElementById('r-items').textContent=Math.round(items/h)+' /h';
+  document.getElementById('r-xp').textContent=Math.round(xp/h).toLocaleString()+' /h';
+  document.getElementById('r-mobs').textContent=Math.round(mobs/h)+' /h';
+}
+function addMobType(){
+  var name=document.getElementById('mob-name-input').value.trim();if(!name)return;
+  var silver=parseInt(document.getElementById('mob-silver').value)||0;
+  var xp=parseInt(document.getElementById('mob-xp-val').value)||0;
+  var found=false;for(var i=0;i<mobTypes.length;i++){if(mobTypes[i].name===name)found=true;}
+  if(!found)mobTypes.push({name:name,silver:silver,xp:xp});
+  ss('abt_mobtypes',mobTypes);
+  document.getElementById('mob-name-input').value='';
+  document.getElementById('mob-silver').value='';
+  document.getElementById('mob-xp-val').value='';
+  renderMobList();
+}
+function renderMobList(){
+  var el=document.getElementById('mob-list-el');
+  if(!mobTypes.length){el.innerHTML='<div class="empty">Aucun mob enregistre.</div>';return;}
+  var html='';
+  for(var i=0;i<mobTypes.length;i++){
+    var m=mobTypes[i];
+    html+='<div class="mob-item">';
+    html+='<span class="mob-name">'+m.name+'</span>';
+    html+='<span class="mob-meta">'+m.silver.toLocaleString()+' s - '+m.xp.toLocaleString()+' xp</span>';
+    html+='<button onclick="killMobQuick(\''+m.name.replace(/\\/g,'\\\\').replace(/\'/g,"\\'")+"',"+m.silver+','+m.xp+')" style="background:var(--green-bg);border-color:var(--green);color:var(--green-text);font-size:12px;padding:5px 10px"><i class="ti ti-plus"></i> Kill</button>';
+    html+='<button class="del-btn" onclick="delMobType('+i+')"><i class="ti ti-trash"></i></button>';
+    html+='</div>';
+  }
+  el.innerHTML=html;
+  renderKillBreakdown();
+}
+function killMobQuick(name,silver,xp){
+  if(!running){alert('Lance une session dabord !');return;}
+  entries.push({type:'mob',name:name,tier:'',qty:1,val:silver,xp:xp,zone:document.getElementById('e-zone').value,time:Date.now()});
+  ss('abt_entries',entries);renderAll();
+}
+function delMobType(i){mobTypes.splice(i,1);ss('abt_mobtypes',mobTypes);renderMobList();}
+function renderKillBreakdown(){
+  var el=document.getElementById('kill-breakdown');
+  var kills=entries.filter(function(e){return e.type==='mob';});
+  if(!kills.length){el.innerHTML='<div class="empty">Aucun kill enregistre.</div>';return;}
+  var counts={};kills.forEach(function(k){counts[k.name]=(counts[k.name]||0)+1;});
+  var max=0;Object.keys(counts).forEach(function(k){if(counts[k]>max)max=counts[k];});
+  var sorted=Object.keys(counts).map(function(k){return[k,counts[k]];}).sort(function(a,b){return b[1]-a[1];});
+  var html='';
+  sorted.forEach(function(e){
+    html+='<div class="bar-row"><span class="bar-label">'+e[0]+'</span>';
+    html+='<div class="bar-track"><div class="bar-fill" style="width:'+Math.round(e[1]/max*100)+'%"></div></div>';
+    html+='<span class="bar-val">'+e[1]+' kills</span></div>';
+  });
+  el.innerHTML=html;
+}
+function renderStats(){
+  var silverByName={};
+  entries.filter(function(e){return e.type==='silver';}).forEach(function(e){silverByName[e.name]=(silverByName[e.name]||0)+e.qty;});
+  var valItems=entries.filter(function(e){return e.val>0&&e.type!=='silver';}).sort(function(a,b){return b.val-a.val;}).slice(0,8);
+  var zones={};entries.forEach(function(e){if(e.zone)zones[e.zone]=(zones[e.zone]||0)+1;});
+  var mobs=entries.filter(function(e){return e.type==='mob';});
+  var totalSilver=0;entries.filter(function(e){return e.type==='silver';}).forEach(function(e){totalSilver+=e.qty;});
+  var h=elapsed/3600000;
+  document.getElementById('s-eff').textContent=h>0.001?Math.round(totalSilver/h).toLocaleString():'-';
+  var ms=0;mobs.forEach(function(e){ms+=(e.val||0);});
+  var mx=0;mobs.forEach(function(e){mx+=e.xp;});
+  document.getElementById('s-silver-mob').textContent=mobs.length?Math.round(ms/mobs.length).toLocaleString():'-';
+  document.getElementById('s-xp-mob').textContent=mobs.length?Math.round(mx/mobs.length).toLocaleString():'-';
+  var best=entries.filter(function(e){return e.val>0;}).sort(function(a,b){return b.val-a.val;})[0];
+  document.getElementById('s-best-item').textContent=best?best.name+' ('+best.val.toLocaleString()+'s)':'-';
+  function bars(id,data,suffix){
+    var el=document.getElementById(id);
+    if(!data.length){el.innerHTML='<div class="empty">Pas de donnees.</div>';return;}
+    var max=0;data.forEach(function(d){if(d[1]>max)max=d[1];});
+    var html='';
+    data.forEach(function(d){
+      html+='<div class="bar-row"><span class="bar-label">'+d[0]+'</span>';
+      html+='<div class="bar-track"><div class="bar-fill" style="width:'+Math.round(d[1]/max*100)+'%"></div></div>';
+      html+='<span class="bar-val">'+d[1].toLocaleString()+suffix+'</span></div>';
+    });
+    el.innerHTML=html;
+  }
+  bars('chart-silver',Object.keys(silverByName).map(function(k){return[k,silverByName[k]];}).sort(function(a,b){return b[1]-a[1];}).slice(0,6),' s');
+  bars('chart-items',valItems.map(function(e){return[e.name,e.val];}),' s');
+  bars('chart-zone',Object.keys(zones).map(function(k){return[k,zones[k]];}).sort(function(a,b){return b[1]-a[1];}),'');
+}
+function saveSession(){
+  var d=new Date();
+  var name=d.toLocaleDateString('fr-FR')+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  var silver=0;entries.filter(function(e){return e.type==='silver';}).forEach(function(e){silver+=e.qty;});
+  var mobs=entries.filter(function(e){return e.type==='mob';}).length;
+  var xp=0;entries.forEach(function(e){xp+=e.xp;});
+  var items=entries.filter(function(e){return e.type==='equip'||e.type==='mat'||e.type==='craft';}).length;
+  hist.unshift({name:name,elapsed:elapsed,silver:silver,mobs:mobs,xp:xp,items:items,entries:entries.slice(),savedAt:Date.now()});
+  ss('abt_history',hist);
+  alert('Session sauvegardee !');
+}
+function renderHistory(){
+  var el=document.getElementById('history-list');
+  if(!hist.length){el.innerHTML='<div class="empty">Aucune session sauvegardee.</div>';return;}
+  var html='';
+  for(var i=0;i<hist.length;i++){
+    var s=hist[i];var sec=Math.floor(s.elapsed/1000);
+    var dur=Math.floor(sec/3600)+'h'+String(Math.floor((sec%3600)/60)).padStart(2,'0');
+    html+='<div class="hist-card" onclick="loadSession('+i+')">';
+    html+='<div style="display:flex;justify-content:space-between;align-items:center">';
+    html+='<span class="hist-title">'+s.name+'</span>';
+    html+='<button onclick="event.stopPropagation();deleteSession('+i+')" class="del-btn"><i class="ti ti-trash"></i></button>';
+    html+='</div><div class="hist-meta">Duree : '+dur+'</div>';
+    html+='<div class="hist-stats">';
+    html+='<span>'+s.silver.toLocaleString()+' s</span>';
+    html+='<span>'+s.mobs+' kills</span>';
+    html+='<span>'+s.xp.toLocaleString()+' xp</span>';
+    html+='<span>'+s.items+' items</span>';
+    html+='</div></div>';
+  }
+  el.innerHTML=html;
+}
+function loadSession(i){
+  if(!confirm('Charger cette session ?'))return;
+  var s=hist[i];entries=s.entries.slice();elapsed=s.elapsed;
+  ss('abt_entries',entries);ss('abt_elapsed',elapsed);
+  updateTimerDisplay();renderAll();
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('page-farm').classList.add('active');
+  document.querySelectorAll('.nav-btn')[0].classList.add('active');
+}
+function deleteSession(i){hist.splice(i,1);ss('abt_history',hist);renderHistory();}
+function clearHistory(){if(confirm('Effacer tout ?')){hist=[];ss('abt_history',hist);renderHistory();}}
+function exportCSV(){
+  var header='Heure,Type,Nom,Tier,Quantite,Valeur_Silver,XP,Zone';
+  var rows=entries.map(function(e){return[new Date(e.time).toLocaleTimeString('fr-FR'),TYPES[e.type],'"'+e.name+'"',e.tier||'',e.qty,e.val,e.xp,e.zone||''].join(',');});
+  var csv=[header].concat(rows).join('\n');
+  document.getElementById('export-preview').textContent=csv;
+  dl('albion_session.csv',csv,'text/csv');
+}
+function exportJSON(){
+  var data={session:{elapsed:elapsed,entries:entries},mobTypes:mobTypes,exportedAt:new Date().toISOString()};
+  var j=JSON.stringify(data,null,2);
+  document.getElementById('export-preview').textContent=j;
+  dl('albion_session.json',j,'application/json');
+}
+function showExportText(){
+  var silver=0;entries.filter(function(e){return e.type==='silver';}).forEach(function(e){silver+=e.qty;});
+  var mobs=entries.filter(function(e){return e.type==='mob';}).length;
+  var xp=0;entries.forEach(function(e){xp+=e.xp;});
+  var items=entries.filter(function(e){return e.type==='equip'||e.type==='mat'||e.type==='craft';}).length;
+  var sec=Math.floor(elapsed/1000);var h=elapsed/3600000;
+  var dur=Math.floor(sec/3600)+'h'+String(Math.floor((sec%3600)/60)).padStart(2,'0');
+  var tv=0;entries.forEach(function(e){tv+=(e.val||0)+(e.type==='silver'?e.qty:0);});
+  document.getElementById('export-preview').textContent='=== ALBION FARM TRACKER ===\nDuree        : '+dur+'\nSilver       : '+silver.toLocaleString()+' ('+(h>0?Math.round(silver/h).toLocaleString():0)+'/h)\nKills        : '+mobs+' ('+(h>0?Math.round(mobs/h):0)+'/h)\nXP           : '+xp.toLocaleString()+' ('+(h>0?Math.round(xp/h).toLocaleString():0)+'/h)\nItems        : '+items+'\nValeur totale: '+tv.toLocaleString()+' silver';
+}
+function importJSON(){
+  try{
+    var data=JSON.parse(document.getElementById('import-area').value.trim());
+    if(data.session&&data.session.entries){
+      entries=data.session.entries;elapsed=data.session.elapsed||0;
+      ss('abt_entries',entries);ss('abt_elapsed',elapsed);
+      if(data.mobTypes){mobTypes=data.mobTypes;ss('abt_mobtypes',mobTypes);}
+      updateTimerDisplay();renderAll();alert('Import reussi !');
+    }else alert('Format invalide.');
+  }catch(e){alert('JSON invalide.');}
+}
+function resetCurrent(){
+  if(!confirm('Reinitialiser la session ?'))return;
+  running=false;clearInterval(tickInterval);elapsed=0;startTime=null;entries=[];
+  ss('abt_entries',[]);ss('abt_elapsed',0);
+  document.getElementById('toggle-btn').innerHTML='<i class="ti ti-player-play"></i> Demarrer';
+  document.getElementById('status-badge').textContent='Arrete';
+  document.getElementById('status-badge').className='badge badge-off';
+  document.getElementById('save-btn').style.display='none';
+  updateTimerDisplay();renderAll();updateStats();
+}
+function dl(filename,content,type){
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([content],{type:type}));
+  a.download=filename;a.click();
+}
+</script>
+</body>
+</html>
